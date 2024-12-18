@@ -9,6 +9,32 @@ sgs.LoadTranslationTable{
 -- General(Package 拓展包名, const QString 姓名, const QString 势力,int 血量(按阴阳鱼计算), bool 性别（true 男/false 女）, bool 是否在选将列表中隐藏, bool 是否在客户端中隐藏)
 -- 创建武将 刘焉 野
 liuyan = sgs.General(fengyun, "liuyan", "careerist", 4, true)
+
+-- 生成一张只能对自己使用的乐不思蜀技能卡
+devindulgence = sgs.CreateSkillCard{
+    name = "indulgence", -- 牌名
+    -- target_fixed = false, -- 需要指定目标
+    will_throw = false, -- 使用后不被弃置
+    can_recast = false, -- 不能能被重铸
+    filter = function (self, targets, to_select, Self) -- 只能指定自己
+        if to_select:objectName() == Self:objectName() then
+            return true
+        end
+        return false
+    end,
+    feasible = function (self, targets, Self)
+        SelfJudingArea = Self:getJudgingArea() -- 获取玩家判定区
+        if SelfJudingArea:length()>0 then -- 如果判定区有牌
+            Check = IsInTable("indulgence", SelfJudingArea) -- 判断判断区是否存在乐不思蜀
+            if Check then
+                return nil
+            else return true
+            end
+        end
+    end,
+
+}
+
 -- 刘焉技能1 立牧
 limu = sgs.CreateViewAsSkill{
     name = "limu",
@@ -32,7 +58,7 @@ limu = sgs.CreateViewAsSkill{
 	    end
 
         --生成一张乐不思蜀
-        local view_as_card = sgs.Sanguosha:cloneCard("indulgence", suit, number)
+        local view_as_card = devindulgence
 
         --将被用作视为乐不思蜀的牌都加入到乐不思蜀的subcards里
         for _,card in ipairs(cards) do
